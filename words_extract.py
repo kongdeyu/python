@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #coding:utf-8
 
 
@@ -6,7 +5,7 @@ import math
 import re
 
 
-class WordsExtract:
+class WordsExtract(object):
 
     def __init__(self):
         self.longest_word_length = 5
@@ -124,13 +123,5 @@ class WordsExtract:
                 self.dic_words[word][1] = entropy
 
 
-def main():
-    #content = '的正则表达式处理函数。re.match。 ；  ， ： “ ”（ ） 、 ？ 《 》处理函数'
-    #content = '四是四十是十十四是十四四十是四十'
-    #content = '吃葡萄不吐葡萄皮不吃葡萄倒吐葡萄皮'
-    extractor = WordsExtract()
-    extractor.from_file('test.txt')
-
-
-if __name__ == '__main__':
-    main()
+def error(Exception):
+    pass
