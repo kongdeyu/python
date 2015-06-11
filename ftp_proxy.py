@@ -2,7 +2,11 @@
 
 
 import ftplib
+import logging
 import os
+
+
+g_log = logging.getLogger()
 
 
 class FTPProxy(object):
@@ -21,13 +25,15 @@ class FTPProxy(object):
             self.conn.login(user=user, passwd=passwd)
             self.conn.cwd(self.back_dir)
         except Exception as e:
+            g_log.warn('error:%s' % (e))
             #self.conn.quit()
             raise Error(e)
 
-    def close(self):
+    def __del__(self):
         try:
             self.conn.quit()
         except Exception as e:
+            g_log.warn('error:%s' % (e))
             raise Error(e)
 
     def cd2dir(self, subdirlist):
@@ -45,6 +51,7 @@ class FTPProxy(object):
             with open(os.path.join(filedir, filename), 'rb') as f:
                 self.conn.storbinary('stor ' + filename, f)
         except Exception as e:
+            g_log.warn('error:%s' % (e))
             raise Error(e)
 
 

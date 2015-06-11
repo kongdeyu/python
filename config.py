@@ -14,13 +14,11 @@ class Configure(object):
         self.full_file_name = full_file_name
 
     def __getitem__(self, section):
-        self.lock.acquire()
+        with self.lock:
+            option = None
+            if section in Configure.conf:
+                option = Configure.conf[section]
 
-        option = None
-        if section in Configure.conf:
-            option = Configure.conf[section]
-
-        self.lock.release()
         return option
 
     # private attribute
@@ -43,20 +41,17 @@ class Configure(object):
             print 'no config file!'
             return False
 
-        self.lock.acquire()
+        with self.lock:
+            self.cf = ConfigParser.ConfigParser()
+            self.cf.read(self.full_file_name)
 
-        self.cf = ConfigParser.ConfigParser()
-        self.cf.read(self.full_file_name)
-
-        try:
-            Configure.conf['dbhost'] = self.__get_item('db', 'host')
-            Configure.conf['dbport'] = self.__get_item_int('db', 'port')
-            return True
-        except Exception as e:
-            print 'error:%s, load conf fail!' % (e)
-            return False
-        finally:
-            self.lock.release()
+            try:
+                Configure.conf['dbhost'] = self.__get_item('db', 'host')
+                Configure.conf['dbport'] = self.__get_item_int('db', 'port')
+                return True
+            except Exception as e:
+                print 'error:%s, load conf fail!' % (e)
+                return False
 
 
 class Error(Exception):

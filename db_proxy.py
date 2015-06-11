@@ -1,7 +1,12 @@
 #coding:utf-8
 
 
+import contextlib
+import logging
 import MySQLdb
+
+
+g_log = logging.getLogger()
 
 
 class DBProxy(object):
@@ -23,12 +28,14 @@ class DBProxy(object):
                 db=db,
                 charset=charset)
         except Exception as e:
+            g_log.warn('error:%s' % (e))
             raise Error(e)
 
     def __del__(self):
         try:
             self.conn.close()
         except Exception as e:
+            g_log.warn('error:%s' % (e))
             raise Error(e)
 
     @staticmethod
@@ -36,25 +43,27 @@ class DBProxy(object):
         try:
             return MySQLdb.escape_string(cnt)
         except Exception as e:
+            g_log.warn('error:%s' % (e))
             raise Error(e)
 
-    def commit(self):
+    # private attribute
+    def __commit(self):
         self.conn.commit()
 
-    def rollback(self):
+    def __rollback(self):
         self.conn.rollback()
 
     def execute(self, sql, is_commit=True):
         try:
-            cursor = self.conn.cursor()
-            cursor.execute(sql)
-            if is_commit:
-                self.commit()
+            self.conn.ping()
+            with contextlib.closing(self.conn.cursor()) as cursor:
+                cursor.execute(sql)
+                if is_commit:
+                    self.__commit()
         except Exception as e:
-            self.rollback()
+            g_log.warn('error:%s, rollback' % (e))
+            self.__rollback()
             raise Error(e)
-        finally:
-            cursor.close()
 
     def insert(self, sql, is_commit=True):
         self.execute(sql, is_commit)
@@ -64,24 +73,24 @@ class DBProxy(object):
 
     def fetch_list(self, sql):
         try:
-            cursor = self.conn.cursor()
-            cursor.execute(sql)
+            self.conn.ping()
+            with contextlib.closing(self.conn.cursor()) as cursor:
+                cursor.execute(sql)
             return cursor.fetchall()
         except Exception as e:
+            g_log.warn('error:%s' % (e))
             raise Error(e)
-        finally:
-            cursor.close()
 
     def fetch_dict(self, sql):
         try:
-            cursor = self.conn.cursor(
-                cursorclass=MySQLdb.cursors.DictCursor)
-            cursor.execute(sql)
+            self.conn.ping()
+            with contextlib.closing(
+                    self.conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)) as cursor:
+                cursor.execute(sql)
             return cursor.fetchall()
         except Exception as e:
+            g_log.warn('error:%s' % (e))
             raise Error(e)
-        finally:
-            cursor.close()
 
 
 class Error(Exception):
