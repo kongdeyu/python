@@ -123,5 +123,5 @@ class WordsExtract(object):
                 self.dic_words[word][1] = entropy
 
 
-def error(Exception):
+def Error(Exception):
     pass
